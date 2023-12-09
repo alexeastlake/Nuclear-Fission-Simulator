@@ -4,7 +4,7 @@
 const SIM_WIDTH = 700;
 const SIM_HEIGHT = 700;
 const CANVAS_WIDTH = 700;
-const CANVAS_HEIGHT = 900;
+const CANVAS_HEIGHT = 875;
 const GRID_SIZE = 50;
 const TEXT_GAP = 25;
 const FRAMERATE = 60;
@@ -17,11 +17,13 @@ let stopButton;
 const INITIAL_NUCLEI_NUM = 800;
 const NUCLEI_DENSITY = 150;
 const NUCLEUS_DIAMETER = 10;
+const FISSION_CHANCE = 0.95;
 const ADD_NUCLEI_NUM = 100;
 let nucleiGrid;
 let nucleusColor;
 let currentNucleiNum;
 let splitNucleiNum;
+let collisionsNum;
 
 // Neutron variables
 const NEUTRON_MOUSECLICK_NUM = 5;
@@ -47,6 +49,7 @@ function setup() {
 
   currentNucleiNum = 0;
   splitNucleiNum = 0;
+  collisionsNum = 0;
   paused = false;
 
   createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -148,7 +151,9 @@ function draw() {
   // Calculates and draws statistics text
   drawText("Nuclei: " + currentNucleiNum, TEXT_GAP, SIM_HEIGHT + TEXT_GAP * 2);
   drawText("Neutrons: " + neutrons.length, TEXT_GAP, SIM_HEIGHT + TEXT_GAP * 3);
-  drawText("Fission Reactions: " + splitNucleiNum, TEXT_GAP, SIM_HEIGHT + TEXT_GAP * 4);
+  drawText("Collisions: " + collisionsNum, TEXT_GAP, SIM_HEIGHT + TEXT_GAP * 4);
+  drawText("Fission Reactions: " + splitNucleiNum, TEXT_GAP, SIM_HEIGHT + TEXT_GAP * 5);
+  drawText("% of Collisions -> Fission: " + (collisionsNum == 0 ? 0 : ((splitNucleiNum / collisionsNum) * 100).toFixed(2))  + "%", TEXT_GAP, SIM_HEIGHT + TEXT_GAP * 6);
 }
 
 function mouseClicked() {
@@ -244,10 +249,14 @@ function checkCollisions() {
 
       for (let k = cellNuclei.length - 1; k >= 0; k--) {
         if (dist(cellNuclei[k].x, cellNuclei[k].y, neutron.x, neutron.y) <= ((NUCLEUS_DIAMETER / 2) + (NEUTRON_DIAMETER / 2))) {
-          splitNucleus(cellsToCheck[j][0], cellsToCheck[j][1], k);
-          neutrons.splice(i, 1);
-          
-          break;
+          collisionsNum++;
+
+          if (random(0, 1) < FISSION_CHANCE) {
+            splitNucleus(cellsToCheck[j][0], cellsToCheck[j][1], k);
+            neutrons.splice(i, 1);
+
+            break;
+          }
         }
       }
     }
@@ -270,8 +279,4 @@ function splitNucleus(r, c, k) {
 function drawText(t, x, y) {
   fill(textColor);
   text(t, x, y);
-}
-
-function pause() {
-
 }
