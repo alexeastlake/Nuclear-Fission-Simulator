@@ -1,18 +1,27 @@
+// TODO: swap to using Vector objects
+
 // Canvas and grid variables
 const SIM_WIDTH = 700;
 const SIM_HEIGHT = 700;
 const CANVAS_WIDTH = 700;
 const CANVAS_HEIGHT = 900;
 const GRID_SIZE = 50;
+const TEXT_GAP = 25;
 const FRAMERATE = 60;
 let backgroundColor;
+let textColor;
+let addNucleiButton;
+let stopButton;
 
 // Nuclei variables
-const NUCLEI_NUM = 1000;
-const NUCLEI_DENSITY = 75;
+const INITIAL_NUCLEI_NUM = 800;
+const NUCLEI_DENSITY = 150;
 const NUCLEUS_DIAMETER = 10;
+const ADD_NUCLEI_NUM = 100;
 let nucleiGrid;
 let nucleusColor;
+let currentNucleiNum;
+let splitNucleiNum;
 
 // Neutron variables
 const NEUTRON_MOUSECLICK_NUM = 5;
@@ -29,13 +38,43 @@ const X_LEFT_BOUND = Y_TOP_BOUND = NEUTRON_REFLECTOR_WIDTH;
 const X_RIGHT_BOUND = SIM_WIDTH - NEUTRON_REFLECTOR_WIDTH;
 const Y_BOTTOM_BOUND = SIM_HEIGHT - NEUTRON_REFLECTOR_WIDTH;
 
+let paused;
+
 function setup() { 
   // Canvas and grid variables
   backgroundColor = color(10, 10, 10);
+  textColor = color(255, 255, 255);
+
+  currentNucleiNum = 0;
+  splitNucleiNum = 0;
+  paused = false;
 
   createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
   frameRate(FRAMERATE);
+  textFont("Verdana");
+  textSize(16);
   noStroke();
+
+  // Creates buttons
+  addNucleiButton = createButton("Add Nuclei");
+  addNucleiButton.position(TEXT_GAP, SIM_HEIGHT + TEXT_GAP / 3);
+  addNucleiButton.mousePressed(() => {
+    for (let i = 0; i < ADD_NUCLEI_NUM; i++) {
+      addNucleus();
+    }
+  });
+
+  stopButton = createButton("Pause");
+  stopButton.position(CANVAS_WIDTH - TEXT_GAP * 3, SIM_HEIGHT + TEXT_GAP / 3);
+  stopButton.mousePressed(() => {
+    if (paused) {
+      paused = false;
+      stopButton.html("Pause");
+    } else {
+      paused = true;
+      stopButton.html("Play");
+    }
+  });
 
   neutronReflectors = [];
   neutrons = [];
@@ -60,33 +99,28 @@ function setup() {
   }
   
   // Creates nuclei and places them in grid
-  for (let i = 0; i < NUCLEI_NUM; i++) {
-    let x = map(randomGaussian(SIM_WIDTH / 2, NUCLEI_DENSITY), 0, SIM_WIDTH, X_LEFT_BOUND + (NUCLEUS_DIAMETER / 2), X_RIGHT_BOUND - (NUCLEUS_DIAMETER / 2), true);
-    let y = map(randomGaussian(SIM_WIDTH / 2, NUCLEI_DENSITY), 0, SIM_WIDTH, Y_TOP_BOUND + (NUCLEUS_DIAMETER / 2), Y_BOTTOM_BOUND - (NUCLEUS_DIAMETER / 2), true);
-    
-    let nucleus = new Nuclei(x, y, NUCLEUS_DIAMETER, nucleusColor)
-    
-    let r = floor(nucleus.x / GRID_SIZE);
-    let c = floor(nucleus.y / GRID_SIZE);
-    
-    nucleiGrid[r][c].push(nucleus);
+  for (let i = 0; i < INITIAL_NUCLEI_NUM; i++) {
+    addNucleus();
   }
 }
 
 function draw() {
   background(backgroundColor);
   
-  // Updates all neutrons
-  for (let i = neutrons.length - 1; i >= 0; i--) {
-    neutrons[i].update();
-    
-    if (neutrons[i].life <= 0) {
-      neutrons.splice(i, 1);
+  if (!paused) {
+    // Updates all neutrons
+    for (let i = neutrons.length - 1; i >= 0; i--) {
+      neutrons[i].update();
+      
+      if (neutrons[i].life <= 0) {
+        neutrons.splice(i, 1);
+      }
     }
-  }
   
-  // Checks for collisions
-  checkCollisions();
+    // Checks for collisions
+    checkCollisions();
+  }
+
   
   // Draws all neutrons
   for (let i = neutrons.length - 1; i >= 0; i--) {
@@ -109,7 +143,12 @@ function draw() {
   // Draws all neutron reflectors
   for (let i = 0; i < neutronReflectors.length;i++) {
     neutronReflectors[i].draw();
-  } 
+  }
+
+  // Calculates and draws statistics text
+  drawText("Nuclei: " + currentNucleiNum, TEXT_GAP, SIM_HEIGHT + TEXT_GAP * 2);
+  drawText("Neutrons: " + neutrons.length, TEXT_GAP, SIM_HEIGHT + TEXT_GAP * 3);
+  drawText("Fission Reactions: " + splitNucleiNum, TEXT_GAP, SIM_HEIGHT + TEXT_GAP * 4);
 }
 
 function mouseClicked() {
@@ -119,6 +158,19 @@ function mouseClicked() {
       neutrons.push(new Neutron(mouseX, mouseY, NEUTRON_DIAMETER));
     }
   }
+}
+
+function addNucleus() {
+  let x = map(randomGaussian(SIM_WIDTH / 2, NUCLEI_DENSITY), 0, SIM_WIDTH, X_LEFT_BOUND + (NUCLEUS_DIAMETER / 2), X_RIGHT_BOUND - (NUCLEUS_DIAMETER / 2), true);
+  let y = map(randomGaussian(SIM_WIDTH / 2, NUCLEI_DENSITY), 0, SIM_WIDTH, Y_TOP_BOUND + (NUCLEUS_DIAMETER / 2), Y_BOTTOM_BOUND - (NUCLEUS_DIAMETER / 2), true);
+  
+  let nucleus = new Nuclei(x, y, NUCLEUS_DIAMETER, nucleusColor)
+  
+  let r = floor(nucleus.x / GRID_SIZE);
+  let c = floor(nucleus.y / GRID_SIZE);
+  
+  nucleiGrid[r][c].push(nucleus);
+  currentNucleiNum++;
 }
 
 function checkCollisions() {
@@ -211,4 +263,15 @@ function splitNucleus(r, c, k) {
   }
   
   nucleiGrid[r][c].splice(k, 1);
+  splitNucleiNum++;
+  currentNucleiNum--;
+}
+
+function drawText(t, x, y) {
+  fill(textColor);
+  text(t, x, y);
+}
+
+function pause() {
+
 }
