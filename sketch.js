@@ -1,66 +1,58 @@
-// Canvas and grid constants
-const width = 700;
-const height = 700;
-const backgroundColor = [10, 10, 10];
-const gridSize = 50;
-const frames = 60;
+// Canvas and grid variables
+const SIM_WIDTH = 700;
+const SIM_HEIGHT = 700;
+const CANVAS_WIDTH = 700;
+const CANVAS_HEIGHT = 900;
+const GRID_SIZE = 50;
+const FRAMERATE = 60;
+let backgroundColor;
 
-// Grid for nuclei
+// Nuclei variables
+const NUCLEI_NUM = 1000;
+const NUCLEI_DENSITY = 75;
+const NUCLEUS_DIAMETER = 10;
 let nucleiGrid;
+let nucleusColor;
 
-// Nuclei constants
-const nucleiNum = 1000;
-const nucleiDensity = 75;
-const nucleiDiameter = 10;
-const nucleiColor = [200, 100, 50];
+// Neutron variables
+const NEUTRON_MOUSECLICK_NUM = 5;
+const NEUTRON_DIAMETER = 5;
+let neutrons;
 
-// Array for neutrons
-let neutrons = [];
+// Neutron reflector variables
+const ADD_NEUTRON_REFLECTORS = true;
+const NEUTRON_REFLECTOR_WIDTH = 5;
+let neutronReflectors;
 
-// Neutron constants
-const neutronDiameter = 5;
-const neutronColor = [100, 100, 100];
-const neutronNumOnMouseClick = 5;
-
-// Array of neutron reflectors
-let neutronReflectors = [];
-
-// Neutron reflector constants
-const addNeutronReflectors = true;
-const neutronReflectorWidth = 5;
-const neutronReflectorColor = [75, 75, 75];
-
-// Constants for bounds of neutron reflectors
-let xLeftBound;
-let xRightBound;
-let yTopBound;
-let yBottomBound;
+// Simulation bounds variables for neutron reflectors
+const X_LEFT_BOUND = Y_TOP_BOUND = NEUTRON_REFLECTOR_WIDTH;
+const X_RIGHT_BOUND = SIM_WIDTH - NEUTRON_REFLECTOR_WIDTH;
+const Y_BOTTOM_BOUND = SIM_HEIGHT - NEUTRON_REFLECTOR_WIDTH;
 
 function setup() { 
-  createCanvas(width, height);
-  frameRate(frames);
-  
+  // Canvas and grid variables
+  backgroundColor = color(10, 10, 10);
+
+  createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
+  frameRate(FRAMERATE);
   noStroke();
+
+  neutronReflectors = [];
+  neutrons = [];
   
   // Creates neutron reflectors if constant specifies
-  if (addNeutronReflectors) {
-    neutronReflectors.push(new NeutronReflector(0, 0, width, neutronReflectorWidth, neutronReflectorColor));
-    neutronReflectors.push(new NeutronReflector(0, 0, neutronReflectorWidth, height, neutronReflectorColor));
-    neutronReflectors.push(new NeutronReflector(width - neutronReflectorWidth, 0, neutronReflectorWidth, height, neutronReflectorColor));
-    neutronReflectors.push(new NeutronReflector(0, height - neutronReflectorWidth, width, neutronReflectorWidth, neutronReflectorColor));
+  if (ADD_NEUTRON_REFLECTORS) {
+    neutronReflectors.push(new NeutronReflector(0, 0, SIM_WIDTH, NEUTRON_REFLECTOR_WIDTH));
+    neutronReflectors.push(new NeutronReflector(0, 0, NEUTRON_REFLECTOR_WIDTH, SIM_HEIGHT));
+    neutronReflectors.push(new NeutronReflector(SIM_WIDTH - NEUTRON_REFLECTOR_WIDTH, 0, NEUTRON_REFLECTOR_WIDTH, SIM_HEIGHT));
+    neutronReflectors.push(new NeutronReflector(0, SIM_HEIGHT - NEUTRON_REFLECTOR_WIDTH, SIM_WIDTH, NEUTRON_REFLECTOR_WIDTH));
   }
   
-  // Calculates bounds for neutron reflectors
-  xLeftBound = neutronReflectorWidth + nucleiDiameter;
-  xRightBound = width - neutronReflectorWidth - nucleiDiameter;
-  yTopBound = neutronReflectorWidth + nucleiDiameter;
-  yBottomBound = height - neutronReflectorWidth - nucleiDiameter;
-  
   // Initializes nuclei grid
-  nucleiGrid = new Array(width / gridSize);
+  nucleiGrid = new Array(SIM_WIDTH / GRID_SIZE);
   
   for (let i = 0; i < nucleiGrid.length; i++) {
-    nucleiGrid[i] = new Array(height / gridSize);
+    nucleiGrid[i] = new Array(SIM_HEIGHT / GRID_SIZE);
     
       for (let j = 0; j < nucleiGrid[i].length; j++) {
         nucleiGrid[i][j] = [];
@@ -68,14 +60,14 @@ function setup() {
   }
   
   // Creates nuclei and places them in grid
-  for (let i = 0; i < nucleiNum; i++) {
-    let x = map(randomGaussian(width / 2, nucleiDensity), 0, width, xLeftBound, xRightBound, true);
-    let y = map(randomGaussian(width / 2, nucleiDensity), 0, width, yTopBound, yBottomBound, true);
+  for (let i = 0; i < NUCLEI_NUM; i++) {
+    let x = map(randomGaussian(SIM_WIDTH / 2, NUCLEI_DENSITY), 0, SIM_WIDTH, X_LEFT_BOUND + (NUCLEUS_DIAMETER / 2), X_RIGHT_BOUND - (NUCLEUS_DIAMETER / 2), true);
+    let y = map(randomGaussian(SIM_WIDTH / 2, NUCLEI_DENSITY), 0, SIM_WIDTH, Y_TOP_BOUND + (NUCLEUS_DIAMETER / 2), Y_BOTTOM_BOUND - (NUCLEUS_DIAMETER / 2), true);
     
-    let nucleus = new Nuclei(x, y, nucleiDiameter, nucleiColor)
+    let nucleus = new Nuclei(x, y, NUCLEUS_DIAMETER, nucleusColor)
     
-    let r = floor(nucleus.x / gridSize);
-    let c = floor(nucleus.y / gridSize);
+    let r = floor(nucleus.x / GRID_SIZE);
+    let c = floor(nucleus.y / GRID_SIZE);
     
     nucleiGrid[r][c].push(nucleus);
   }
@@ -122,28 +114,36 @@ function draw() {
 
 function mouseClicked() {
   // Creates new neutrons upon mouse click
-  for (let i = 0; i < neutronNumOnMouseClick; i++) {
-    neutrons.push(new Neutron(mouseX, mouseY, neutronDiameter, neutronColor));
+  if ((mouseX > X_LEFT_BOUND + NEUTRON_DIAMETER / 2 && mouseX < X_RIGHT_BOUND - NEUTRON_DIAMETER / 2) && (mouseY > Y_TOP_BOUND + NEUTRON_DIAMETER / 2 && mouseY < Y_BOTTOM_BOUND - NEUTRON_DIAMETER / 2)) {
+    for (let i = 0; i < NEUTRON_MOUSECLICK_NUM; i++) {
+      neutrons.push(new Neutron(mouseX, mouseY, NEUTRON_DIAMETER));
+    }
   }
 }
 
 function checkCollisions() {
-  if (addNeutronReflectors) {
+  if (ADD_NEUTRON_REFLECTORS) {
     // If there are neutron reflectors, calculates reflections
     for (let i = 0; i < neutrons.length; i++) {
       let neutron = neutrons[i];
 
-      if (neutron.x <= xLeftBound) {
-        neutron.x = xLeftBound;
+      if (neutron.x <= X_LEFT_BOUND + (NEUTRON_DIAMETER / 2)) {
+        neutron.x = X_LEFT_BOUND + (NEUTRON_DIAMETER / 2);
         neutron.vx = -(neutron.vx);
-      } else if (neutron.x >= xRightBound) {
-        neutron.x = xRightBound;
+      }
+      
+      if (neutron.x >= (X_RIGHT_BOUND - NEUTRON_DIAMETER / 2)) {
+        neutron.x = X_RIGHT_BOUND - (NEUTRON_DIAMETER / 2);
         neutron.vx = -(neutron.vx);
-      } else if (neutron.y <= yTopBound) {
-        neutron.y = yTopBound;
+      }
+      
+      if (neutron.y <= (Y_TOP_BOUND + NEUTRON_DIAMETER / 2)) {
+        neutron.y = Y_TOP_BOUND + (NEUTRON_DIAMETER / 2);
         neutron.vy = -(neutron.vy);
-      } else if (neutron.y >= yBottomBound) {
-        neutron.y = yBottomBound;
+      }
+      
+      if (neutron.y >= (Y_BOTTOM_BOUND - NEUTRON_DIAMETER / 2)) {
+        neutron.y = Y_BOTTOM_BOUND - (NEUTRON_DIAMETER / 2);
         neutron.vy = -(neutron.vy);
       }
     }
@@ -158,42 +158,45 @@ function checkCollisions() {
     }
   }
   
-  for (let i = 0; i < neutrons.length; i++) {
+  for (let i = neutrons.length - 1; i >= 0; i--) {
     // Calculates location in grid of neutron
     let neutron = neutrons[i];
     
-    let r = floor(neutron.x / gridSize);
-    let c = floor(neutron.y / gridSize);
+    let r = floor(neutron.x / GRID_SIZE);
+    let c = floor(neutron.y / GRID_SIZE);
     
-    // Creates array of nuclei to check, from current neutron cell and its adjacent cells
-    let nucleiToCheck = [];
-    let cellNuclei = nucleiGrid[r][c];
+    // Creates array of cell indexes to check, from current neutron cell and its adjacent cells
+    let cellsToCheck = [];
     
-    nucleiToCheck = nucleiToCheck.concat(cellNuclei);
+    cellsToCheck.push([r, c]);
     
     if (r - 1 >= 0) {
-        nucleiToCheck = nucleiToCheck.concat(nucleiGrid[r - 1][c]);
+      cellsToCheck.push([r - 1, c]);
     }
     
     if (r + 1 < nucleiGrid.length) {
-        nucleiToCheck = nucleiToCheck.concat(nucleiGrid[r + 1][c]);
+      cellsToCheck.push([r + 1, c]);
     }
     
     if (c - 1 >= 0) {
-        nucleiToCheck = nucleiToCheck.concat(nucleiGrid[r][c - 1]);
+      cellsToCheck.push([r, c - 1]);
     }
     
     if (c + 1 < nucleiGrid[r].length) {
-        nucleiToCheck = nucleiToCheck.concat(nucleiGrid[r][c + 1]);
+      cellsToCheck.push([r, c + 1]);
     }
     
     // Checks if neutron collided with any nearby nuclei
-    for (let j = 0; j < cellNuclei.length; j++) {
-      if (dist(cellNuclei[j].x, cellNuclei[j].y, neutron.x, neutron.y) <= ((nucleiDiameter / 2) + (neutronDiameter / 2))) {
-        splitNucleus(r, c, j);
-        neutrons.splice(i, 1);
-        
-        break;
+    for (let j = cellsToCheck.length - 1; j >= 0; j--) {
+      let cellNuclei = nucleiGrid[cellsToCheck[j][0]][cellsToCheck[j][1]]
+
+      for (let k = cellNuclei.length - 1; k >= 0; k--) {
+        if (dist(cellNuclei[k].x, cellNuclei[k].y, neutron.x, neutron.y) <= ((NUCLEUS_DIAMETER / 2) + (NEUTRON_DIAMETER / 2))) {
+          splitNucleus(cellsToCheck[j][0], cellsToCheck[j][1], k);
+          neutrons.splice(i, 1);
+          
+          break;
+        }
       }
     }
   }
@@ -204,7 +207,7 @@ function splitNucleus(r, c, k) {
   let nucleus = nucleiGrid[r][c][k];
   
   for (let i = 0; i < round(random(2, 3)); i++) {
-    neutrons.push(new Neutron(nucleus.x, nucleus.y, neutronDiameter, neutronColor));
+    neutrons.push(new Neutron(nucleus.x, nucleus.y, NEUTRON_DIAMETER));
   }
   
   nucleiGrid[r][c].splice(k, 1);
