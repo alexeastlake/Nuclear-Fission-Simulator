@@ -12,10 +12,11 @@ let backgroundColor;
 let textColor;
 let addNucleiButton;
 let stopButton;
+let toggleNeutronReflectorsButton;
 
 // Nuclei variables
-const INITIAL_NUCLEI_NUM = 800;
-const NUCLEI_DENSITY = 150;
+const INITIAL_NUCLEI_NUM = 500;
+const NUCLEI_DENSITY = 100;
 const NUCLEUS_DIAMETER = 10;
 const FISSION_CHANCE = 0.95;
 const ADD_NUCLEI_NUM = 100;
@@ -31,7 +32,7 @@ const NEUTRON_DIAMETER = 5;
 let neutrons;
 
 // Neutron reflector variables
-const ADD_NEUTRON_REFLECTORS = true;
+let enableNeutronReflectors;
 const NEUTRON_REFLECTOR_WIDTH = 5;
 let neutronReflectors;
 
@@ -51,6 +52,7 @@ function setup() {
   splitNucleiNum = 0;
   collisionsNum = 0;
   paused = false;
+  enableNeutronReflectors = true;
 
   createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
   frameRate(FRAMERATE);
@@ -65,6 +67,12 @@ function setup() {
     for (let i = 0; i < ADD_NUCLEI_NUM; i++) {
       addNucleus();
     }
+  });
+
+  toggleNeutronReflectorsButton = createButton("Toggle Neutron Reflectors");
+  toggleNeutronReflectorsButton.position(TEXT_GAP * 5, SIM_HEIGHT + TEXT_GAP / 3);
+  toggleNeutronReflectorsButton.mousePressed(() => {
+    enableNeutronReflectors = !enableNeutronReflectors;
   });
 
   stopButton = createButton("Pause");
@@ -83,7 +91,7 @@ function setup() {
   neutrons = [];
   
   // Creates neutron reflectors if constant specifies
-  if (ADD_NEUTRON_REFLECTORS) {
+  if (enableNeutronReflectors) {
     neutronReflectors.push(new NeutronReflector(0, 0, SIM_WIDTH, NEUTRON_REFLECTOR_WIDTH));
     neutronReflectors.push(new NeutronReflector(0, 0, NEUTRON_REFLECTOR_WIDTH, SIM_HEIGHT));
     neutronReflectors.push(new NeutronReflector(SIM_WIDTH - NEUTRON_REFLECTOR_WIDTH, 0, NEUTRON_REFLECTOR_WIDTH, SIM_HEIGHT));
@@ -123,7 +131,6 @@ function draw() {
     // Checks for collisions
     checkCollisions();
   }
-
   
   // Draws all neutrons
   for (let i = neutrons.length - 1; i >= 0; i--) {
@@ -144,10 +151,12 @@ function draw() {
   }
   
   // Draws all neutron reflectors
-  for (let i = 0; i < neutronReflectors.length;i++) {
-    neutronReflectors[i].draw();
+  if (enableNeutronReflectors) {
+    for (let i = 0; i < neutronReflectors.length;i++) {
+      neutronReflectors[i].draw();
+    }
   }
-
+  
   // Calculates and draws statistics text
   drawText("Nuclei: " + currentNucleiNum, TEXT_GAP, SIM_HEIGHT + TEXT_GAP * 2);
   drawText("Neutrons: " + neutrons.length, TEXT_GAP, SIM_HEIGHT + TEXT_GAP * 3);
@@ -179,7 +188,7 @@ function addNucleus() {
 }
 
 function checkCollisions() {
-  if (ADD_NEUTRON_REFLECTORS) {
+  if (enableNeutronReflectors) {
     // If there are neutron reflectors, calculates reflections
     for (let i = 0; i < neutrons.length; i++) {
       let neutron = neutrons[i];
@@ -209,7 +218,7 @@ function checkCollisions() {
     for (let i = neutrons.length - 1; i >= 0; i--) {
       let neutron = neutrons[i];
 
-      if (neutron.x < 0 || neutron.x > width || neutron.y < 0 || neutron.y > height) {
+      if (neutron.x < 0 || neutron.x > SIM_WIDTH || neutron.y < 0 || neutron.y > SIM_HEIGHT) {
         neutrons.splice(i, 1);
       }
     }
