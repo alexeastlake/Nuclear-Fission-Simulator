@@ -1,7 +1,6 @@
 class NeutronReflector {
   constructor(x, y, width, height) {
-    this.x = x;
-    this.y = y;
+    this.pos = createVector(x, y);
     this.width = width;
     this.height = height;
     
@@ -10,6 +9,6 @@ class NeutronReflector {
   
   draw() {
     fill(this.COLOR);
-    rect(this.x, this.y, this.width, this.height);
+    rect(this.pos.x, this.pos.y, this.width, this.height);
   }
 }

@@ -1,10 +1,7 @@
 class Neutron {
   constructor(x, y, diameter) {
-    this.x = x;
-    this.y = y;
-    
-    this.vx = random([-2, 2]) * random(0, 5);
-    this.vy = random([-2, 2]) * random(0, 5);
+    this.pos = createVector(x, y);
+    this.v = createVector(random([-2, 2]) * random(0, 5), random([-2, 2]) * random(0, 5));
     
     this.diameter = diameter;
     this.COLOR = color(100, 100, 100);
@@ -15,13 +12,11 @@ class Neutron {
   
   draw() {
     fill(this.COLOR);
-    ellipse(this.x, this.y, this.diameter);
+    ellipse(this.pos.x, this.pos.y, this.diameter);
   }
   
   update() {
-    this.x += this.vx;
-    this.y += this.vy;
-    
+    this.pos.add(this.v);
     this.life -= this.DECAY_RATE;
   }
 }

@@ -1,7 +1,6 @@
 class Nuclei {
   constructor(x, y, diameter) {
-    this.x = x;
-    this.y = y;
+    this.pos = createVector(x, y);
     
     this.diameter = diameter;
 
@@ -10,6 +9,6 @@ class Nuclei {
   
   draw() {
     fill(this.COLOR);
-    ellipse(this.x, this.y, this.diameter);
+    ellipse(this.pos.x, this.pos.y, this.diameter);
   } 
 }

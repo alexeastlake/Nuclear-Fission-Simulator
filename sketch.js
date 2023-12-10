@@ -1,5 +1,3 @@
-// TODO: swap to using Vector objects
-
 // Canvas and grid variables
 const SIM_WIDTH = 700;
 const SIM_HEIGHT = 700;
@@ -180,8 +178,8 @@ function addNucleus() {
   
   let nucleus = new Nuclei(x, y, NUCLEUS_DIAMETER, nucleusColor)
   
-  let r = floor(nucleus.x / GRID_SIZE);
-  let c = floor(nucleus.y / GRID_SIZE);
+  let r = floor(nucleus.pos.x / GRID_SIZE);
+  let c = floor(nucleus.pos.y / GRID_SIZE);
   
   nucleiGrid[r][c].push(nucleus);
   currentNucleiNum++;
@@ -193,24 +191,24 @@ function checkCollisions() {
     for (let i = 0; i < neutrons.length; i++) {
       let neutron = neutrons[i];
 
-      if (neutron.x <= X_LEFT_BOUND + (NEUTRON_DIAMETER / 2)) {
-        neutron.x = X_LEFT_BOUND + (NEUTRON_DIAMETER / 2);
-        neutron.vx = -(neutron.vx);
+      if (neutron.pos.x <= X_LEFT_BOUND + (NEUTRON_DIAMETER / 2)) {
+        neutron.pos.x = X_LEFT_BOUND + (NEUTRON_DIAMETER / 2);
+        neutron.v.x = -(neutron.v.x);
       }
       
-      if (neutron.x >= (X_RIGHT_BOUND - NEUTRON_DIAMETER / 2)) {
-        neutron.x = X_RIGHT_BOUND - (NEUTRON_DIAMETER / 2);
-        neutron.vx = -(neutron.vx);
+      if (neutron.pos.x >= (X_RIGHT_BOUND - NEUTRON_DIAMETER / 2)) {
+        neutron.pos.x = X_RIGHT_BOUND - (NEUTRON_DIAMETER / 2);
+        neutron.v.x = -(neutron.v.x);
       }
       
-      if (neutron.y <= (Y_TOP_BOUND + NEUTRON_DIAMETER / 2)) {
-        neutron.y = Y_TOP_BOUND + (NEUTRON_DIAMETER / 2);
-        neutron.vy = -(neutron.vy);
+      if (neutron.pos.y <= (Y_TOP_BOUND + NEUTRON_DIAMETER / 2)) {
+        neutron.pos.y = Y_TOP_BOUND + (NEUTRON_DIAMETER / 2);
+        neutron.v.y = -(neutron.v.y);
       }
       
-      if (neutron.y >= (Y_BOTTOM_BOUND - NEUTRON_DIAMETER / 2)) {
-        neutron.y = Y_BOTTOM_BOUND - (NEUTRON_DIAMETER / 2);
-        neutron.vy = -(neutron.vy);
+      if (neutron.pos.y >= (Y_BOTTOM_BOUND - NEUTRON_DIAMETER / 2)) {
+        neutron.pos.y = Y_BOTTOM_BOUND - (NEUTRON_DIAMETER / 2);
+        neutron.v.y = -(neutron.v.y);
       }
     }
   } else {
@@ -218,7 +216,7 @@ function checkCollisions() {
     for (let i = neutrons.length - 1; i >= 0; i--) {
       let neutron = neutrons[i];
 
-      if (neutron.x < 0 || neutron.x > SIM_WIDTH || neutron.y < 0 || neutron.y > SIM_HEIGHT) {
+      if (neutron.pos.x < 0 || neutron.pos.x > SIM_WIDTH || neutron.pos.y < 0 || neutron.pos.y > SIM_HEIGHT) {
         neutrons.splice(i, 1);
       }
     }
@@ -228,8 +226,8 @@ function checkCollisions() {
     // Calculates location in grid of neutron
     let neutron = neutrons[i];
     
-    let r = floor(neutron.x / GRID_SIZE);
-    let c = floor(neutron.y / GRID_SIZE);
+    let r = floor(neutron.pos.x / GRID_SIZE);
+    let c = floor(neutron.pos.y / GRID_SIZE);
     
     // Creates array of cell indexes to check, from current neutron cell and its adjacent cells
     let cellsToCheck = [];
@@ -257,7 +255,7 @@ function checkCollisions() {
       let cellNuclei = nucleiGrid[cellsToCheck[j][0]][cellsToCheck[j][1]]
 
       for (let k = cellNuclei.length - 1; k >= 0; k--) {
-        if (dist(cellNuclei[k].x, cellNuclei[k].y, neutron.x, neutron.y) <= ((NUCLEUS_DIAMETER / 2) + (NEUTRON_DIAMETER / 2))) {
+        if (dist(cellNuclei[k].pos.x, cellNuclei[k].pos.y, neutron.pos.x, neutron.pos.y) <= ((NUCLEUS_DIAMETER / 2) + (NEUTRON_DIAMETER / 2))) {
           collisionsNum++;
 
           if (random(0, 1) < FISSION_CHANCE) {
@@ -277,7 +275,7 @@ function splitNucleus(r, c, k) {
   let nucleus = nucleiGrid[r][c][k];
   
   for (let i = 0; i < round(random(2, 3)); i++) {
-    neutrons.push(new Neutron(nucleus.x, nucleus.y, NEUTRON_DIAMETER));
+    neutrons.push(new Neutron(nucleus.pos.x, nucleus.pos.y, NEUTRON_DIAMETER));
   }
   
   nucleiGrid[r][c].splice(k, 1);
